@@ -1,1 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PsyDuck's Theoretical Physics Wave Simulator</title>
+    <style>
+        body {
+            background-color: #030307;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        h1 {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+        p.subtitle {
+            color: #8a8a93;
+            font-size: 0.85rem;
+            margin: 0 0 20px 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        canvas {
+            border-radius: 6px;
+            background-color: #030307;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+        button {
+            background: #ffffff;
+            color: #030307;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        button.reset {
+            background: transparent;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        button.reset:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .stats {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #00ffcc;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
 
+    <div class="container">
+        <h1>Evolving Thought Field Warping Around Memory Core</h1>
+        <p class="subtitle">Relativistic Non-Linear Time Scaling Matrix Topology</p>
+        
+        <canvas id="simCanvas" width="400" height="400"></canvas>
+        
+        <div class="controls">
+            <button id="playPauseBtn">Pause</button>
+            <button id="resetBtn" class="reset">Reset Packet</button>
+        </div>
+
+        <div class="stats">
+            <div>GRID SIZE: 100x100 Grid</div>
+            <div>DENSITY (M): 18.0</div>
+            <div>BASE DT: 0.20</div>
+            <div>STATUS: Running Realtime</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const N = 100; // Grid Size
+        const base_dt = 0.20;
+        const memory_density = 18.0;
+        
+        // Allocate 1D arrays for fast WebGL-like indexing performance in a 2D mapping
+        let psi_r = new Float32Array(N * N);
+        let psi_i = new Float32Array(N * N);
+        let next_r = new Float32Array(N * N);
+        let next_i = new Float32Array(N * N);
+        let time_dilation = new Float32Array(N * N);
+
+        let isRunning = true;
+
+        // Precompute metric architecture (Step 1 & 2 from your Python logic)
+        const cx = N / 2;
+        const cy = N / 2;
+        for (let y = 0; y < N; y++) {
+            for (let x = 0; x < N; x++) {
+                const idx = y * N + x;
+                let r = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+                if (r === 0) r = 0.5;
+                
+                // Schwarzschild time metric
+                const metricValue = 1.0 - (2.0 * memory_density) / r;
+                time_dilation[idx] = Math.sqrt(Math.max(0.15, metricValue)); // Clamp minimum time flow
+            }
+        }
+
+        // Initialize Gaussian wave packet state vector (Step 3)
+        function initWavePacket() {
+            const x0 = N / 4;
+            const y0 = N / 4;
+            const variance = 30.0;
+            const kx = 0.5;
+            const ky = 0.5;
+
+            for (let y = 0; y < N; y++) {
+                for (let x = 0; x < N; x++) {
+                    const idx = y * N + x;
+                    const envelope = Math.exp(-((x - x0) ** 2 + (y - y0) ** 2) / (2.0 * variance));
+                    const phase = kx * x + ky * y;
+                    
+                    // Euler's formula: exp(i*phase) = cos(phase) + i*sin(phase)
+                    psi_r[idx] = envelope * Math.cos(phase);
+                    psi_i[idx] = envelope * Math.sin(phase);
+                }
+            }
+        }
+
+        // Color helper mapping phase angle to HSV space
+        function hsvToRgb(h, s, v) {
+            let r, g, b;
+            let i = Math.floor(h * 6);
+            let f = h * 6 - i;
+            let p = v * (1 - s);
+            let q = v * (1 - f * s);
+            let t = v * (1 - (1 - f) * s);
+            switch (i % 6) {
+                case 0: r = v, g = t, b = p; break;
+                case 1: r = q, g = v, b = p; break;
+                case 2: r = p, g = v, b = t; break;
+                case 3: r = p, g = q, b = v; break;
+                case 4: r = t, g = p, b = v; break;
+                case 5: r = v, g = p, b = q; break;
+            }
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
+        // Discrete time step engine (Step 4 update_universe_frame variant)
+        function stepSimulation() {
+            for (let y = 0; y < N; y++) {
+                for (let x = 0; x < N; x++) {
+                    const idx = y * N + x;
+
+                    // Periodic boundary conditions (equivalent to np.roll)
+                    const left  = y * N + ((x - 1 + N) % N);
+                    const right = y * N + ((x + 1) % N);
+                    const up    = ((y - 1 + N) % N) * N + x;
+                    const down  = ((y + 1) % N) * N + x;
+
+                    // 4-Neighbor Finite-Difference Discrete Laplacian
+                    const lap_r = psi_r[left] + psi_r[right] + psi_r[up] + psi_r[down] - 4.0 * psi_r[idx];
+                    const lap_i = psi_i[left] + psi_i[right] + psi_i[up] + psi_i[down] - 4.0 * psi_i[idx];
+
+                    const dt = base_dt * time_dilation[idx];
+
+                    // Quantum time integration: dPsi/dt = i * Laplacian 
+                    // New_Real = Old_Real - dt * Lap_Imag
+                    // New_Imag = Old_Imag + dt * Lap_Real
+                    next_r[idx] = psi_r[idx] - dt * lap_i;
+                    next_i[idx] = psi_i[idx] + dt * lap_r;
+                }
+            }
+
+            // Swap buffers safely
+            let temp_r = psi_r; psi_r = next_r; next_r = temp_r;
+            let temp_i = psi_i; psi_i = next_i; next_i = temp_i;
+        }
+
+        function render() {
+            const cellW = canvas.width / N;
+            const cellH = canvas.height / N;
+
+            // Compute maximum magnitude to normalize alpha alpha-blending
+            let maxMag = 0.001;
+            for (let i = 0; i < N * N; i++) {
+                let mag = Math.sqrt(psi_r[i] * psi_r[i] + psi_i[i] * psi_i[i]);
+                if (mag > maxMag) maxMag = mag;
+            }
+
+            ctx.fillStyle = '#030307';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw fields
+            for (let y = 0; y < N; y++) {
+                for (let x = 0; x < N; x++) {
+                    const idx = y * N + x;
+                    const r = psi_r[idx];
+                    const i = psi_i[idx];
+
+                    const magnitude = Math.sqrt(r * r + i * i);
+                    const phase = Math.atan2(i, r); // -PI to PI
+
+                    const brightness = Math.min(1, magnitude / maxMag);
+                    const hue = (phase + Math.PI) / (2 * Math.PI); // Map to [0, 1]
+
+                    const [rgbR, rgbG, rgbB] = hsvToRgb(hue, 1.0, 1.0);
+
+                    ctx.fillStyle = `rgba(${rgbR}, ${rgbG}, ${rgbB}, ${brightness})`;
+                    ctx.fillRect(x * cellW, y * cellH, cellW + 0.5, cellH + 0.5);
+                }
+            }
+
+            // Draw central physical core metric anchor node
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#ffffff';
+            ctx.fill();
+            ctx.shadowBlur = 0; // Clear shadow
+        }
+
+        function loop() {
+            if (isRunning) {
+                stepSimulation();
+            }
+            render();
+            requestAnimationFrame(loop);
+        }
+
+        // Control binds
+        playPauseBtn.addEventListener('click', () => {
+            isRunning = !isRunning;
+            playPauseBtn.textContent = isRunning ? "Pause" : "Play";
+        });
+
+        resetBtn.addEventListener('click', () => {
+            initWavePacket();
+            if (!isRunning) render();
+        });
+
+        // Initialize and fire execution pipeline
+        initWavePacket();
+        loop();
+    </script>
+</body>
+</html>
