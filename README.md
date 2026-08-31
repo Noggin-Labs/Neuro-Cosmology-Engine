@@ -1,4 +1,4 @@
-# 🌌 FolatheDuckofDuckingburg's Quantum Neuro-Cosmology Engine 🦆
+# 🌌 Neuro-Cosmology-Engine
 
 An open-source simulation engine exploring the intersection of **Quantum Mechanics**, **General Relativity**, and **Theoretical Neuroscience**. 
 
