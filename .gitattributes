@@ -1,0 +1,5 @@
+# Ignore raw static HTML files in language statistics
+*.html linguist-detectable=false
+
+# Ensure Jupyter Notebook scripts are explicitly tracked
+*.ipynb linguist-detectable=true
